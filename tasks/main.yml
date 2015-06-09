@@ -1,0 +1,73 @@
+---
+- name: Add the OS specific variables
+  include_vars: "{{ ansible_os_family }}.yml"
+
+- include: Debian.yml
+  when: ansible_os_family  == "Debian"
+
+- name: Copy Django/Graphite settings
+  template:
+    src: local_settings.py.j2
+    dest: "{{ graphite_conf }}/local_settings.py"
+  notify: restart apache
+
+- name: Deploy Carbon configuration
+  template:
+    src: carbon.conf.j2
+    dest: /etc/carbon/carbon.conf
+  notify: restart carbon-cache
+
+- name: Set up storage schemas
+  copy:
+    src: storage-schemas.conf
+    dest: /etc/carbon/storage-schemas.conf
+  notify: restart carbon-cache
+
+- name: Create Graphite database
+  mysql_db:
+    name: "{{ graphite_db_name }}"
+    state: present
+
+- name: Create Graphite database user
+  mysql_user:
+    name: "{{ graphite_db_user }}"
+    password: "{{ graphite_db_pass }}"
+    priv: "{{ graphite_db_name }}.*:ALL"
+
+- name: Determine state of Graphite database
+  command:  graphite-manage inspectdb
+  register: result
+  changed_when: False
+
+- name: Prepare Graphite database
+  command: graphite-manage syncdb --noinput
+  when: result.stdout.find('account_mygraph') == -1
+
+- name: Create Graphite superuser
+  shell: "echo \"from django.contrib.auth.models import User; User.objects.create_superuser('{{ graphite_admin_user }}', '{{ graphite_admin_mail }}', '{{ graphite_admin_pass }}')\" | graphite-manage shell"
+  when: result.stdout.find('account_mygraph') == -1
+
+- name: Enable Carbon
+  service:
+    name: carbon-cache
+    enabled: yes
+    state: started
+
+- name: Deploy Apache vhost
+  copy:
+    src: /usr/share/graphite-web/apache2-graphite.conf
+    dest: /etc/apache2/sites-available
+  notify: restart apache
+
+- name: Enable Graphite vhost
+  file:
+    state: link
+    src: /etc/apache2/sites-available/apache2-graphite.conf
+    dest: /etc/apache2/sites-enabled/apache2-graphite.conf
+  notify: restart apache
+
+- name: Ensure default vhost is disabled
+  file:
+    state: absent
+    path: /etc/apache2/sites-enabled/000-default.conf
+  notify: restart apache

@@ -1,0 +1,21 @@
+- name: Enable Carbon
+  copy:
+    dest: /etc/default/graphite-carbon
+    content: 'CARBON_CACHE_ENABLED=true'
+
+- name: Install Graphite and dependencies
+  apt:
+    name: "{{ item }}"
+    state: present
+  with_items: packages
+
+- name: Set up Apache
+  copy:
+    src: apache2-graphite.conf
+    dest: /etc/apache2/sites-available/default
+  notify: restart apache
+
+- name: Configure WSGI
+  file:
+    path: /etc/apache2/wsgi
+    state: directory

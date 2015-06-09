@@ -1,0 +1,13 @@
+---
+galaxy_info:
+  author: Christopher Gervais <chris@ergonlogic.com>
+  description: Installs and configures Graphite, a highly scalable real-time graphing system.
+  license: GPLv3
+  min_ansible_version: 1.8
+  platforms:
+  - name: Ubuntu
+    versions:
+    - trusty
+  categories:
+  - monitoring
+dependencies: []

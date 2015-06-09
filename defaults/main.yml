@@ -1,0 +1,14 @@
+---
+graphite_db_name: graphite
+graphite_db_user: graphite
+graphite_db_pass: INSECURE_PASSWORD
+graphite_db_host: 127.0.0.1
+graphite_db_port: 3306
+graphite_admin_user: admin
+graphite_admin_pass: admin
+graphite_admin_mail: me@example.com
+graphite_secret_key: DEFAULT_SECRET_KEY
+graphite_log_rendering_performance: no
+graphite_log_cache_performance: no
+graphite_log_metric_access: no
+graphite_timezone: UTC
