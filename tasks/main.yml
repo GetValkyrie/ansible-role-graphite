@@ -53,10 +53,11 @@
     enabled: yes
     state: started
 
-- name: Deploy Apache vhost
-  copy:
+- name: Make Graphite vhost available
+  file:
+    state: link
     src: /usr/share/graphite-web/apache2-graphite.conf
-    dest: /etc/apache2/sites-available
+    dest: /etc/apache2/sites-available/apache2-graphite.conf
   notify: restart apache
 
 - name: Enable Graphite vhost
